@@ -25,15 +25,25 @@ def send_message():
     data = request.get_json()
     username = data.get("username")
     message = data.get("message")
-    
+
+    print(f"[DEBUG] Received send-message request for username={username} message={message}")
+
     if not username or not message:
-        return jsonify({"error": "Invalid request"}), 400
-    
+        return jsonify({"error": "Invalid request, missing username or message"}), 400
+
     chat_id = get_chat_id(username)
+    print(f"[DEBUG] Resolved chat_id={chat_id} for username={username}")
+
     if chat_id:
-        bot.send_message(chat_id=chat_id, text=message)
-        return jsonify({"status": "Message delivered"})
+        try:
+            response = bot.send_message(chat_id=chat_id, text=message)
+            print(f"[DEBUG] Telegram send_message response: {response}")
+            return jsonify({"status": "Message delivered"})
+        except Exception as e:
+            print(f"[ERROR] Telegram send_message failed: {e}")
+            return jsonify({"error": "Failed to send message via Telegram", "details": str(e)}), 500
     else:
+        print(f"[WARN] Username not found: {username}")
         return jsonify({"error": "Username not found"}), 404
 
 @app.route("/health")
@@ -52,7 +62,6 @@ def debug_users():
             cur.execute("SELECT username, chat_id FROM users")
             rows = cur.fetchall()
             return jsonify(rows)
-
 
 def run_flask():
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
