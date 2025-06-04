@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: telegram-otp-bot
+    env: docker
+    plan: free
+    envVars:
+      - key: TELEGRAM_TOKEN
+        value: your_bot_token
+      - key: DATABASE_URL
+        value: postgresql://user:pass@host:port/db
+      - key: WEBHOOK_URL
+        value: https://your-service-name.onrender.com
