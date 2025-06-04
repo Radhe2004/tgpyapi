@@ -7,6 +7,4 @@ services:
       - key: TELEGRAM_TOKEN
         value: your_bot_token
       - key: DATABASE_URL
-        value: postgresql://user:pass@host:port/db
-      - key: WEBHOOK_URL
-        value: https://your-service-name.onrender.com
+        value: postgresql://user:pass@host:port/dbname
