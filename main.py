@@ -1,5 +1,6 @@
 import os
 import threading
+import asyncio
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from telegram import Bot
@@ -36,12 +37,14 @@ def send_message():
 
     if chat_id:
         try:
-            response = bot.send_message(chat_id=chat_id, text=message)
-            print(f"[DEBUG] Telegram send_message response: {response}")
-            return jsonify({"status": "Message delivered"})
+            loop = asyncio.get_event_loop()
+            # Schedule async send_message coroutine on bot event loop
+            loop.create_task(bot.send_message(chat_id=chat_id, text=message))
+            print("[DEBUG] Scheduled Telegram send_message coroutine")
+            return jsonify({"status": "Message scheduled"})
         except Exception as e:
-            print(f"[ERROR] Telegram send_message failed: {e}")
-            return jsonify({"error": "Failed to send message via Telegram", "details": str(e)}), 500
+            print(f"[ERROR] Telegram send_message scheduling failed: {e}")
+            return jsonify({"error": "Failed to schedule Telegram message", "details": str(e)}), 500
     else:
         print(f"[WARN] Username not found: {username}")
         return jsonify({"error": "Username not found"}), 404
