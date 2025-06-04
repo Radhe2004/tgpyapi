@@ -34,7 +34,7 @@ async def handle_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅ Account linked successfully!")
         return ConversationHandler.END
     else:
-        await update.message.reply_text("Username already taken. Please try again:")
+        await update.message.reply_text("Username already taken or chat ID already linked. Please try again:")
         return GET_USERNAME
 
 async def myusername(update: Update, context: ContextTypes.DEFAULT_TYPE):
