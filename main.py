@@ -1,6 +1,7 @@
 import os
 import threading
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from telegram import Bot
 from database import create_tables, get_chat_id
 from bot import setup_bot
@@ -17,6 +18,7 @@ setup_bot(application)
 
 # Flask App for OTP delivery
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all domains
 
 @app.route('/send-message', methods=['POST'])
 def send_message():
@@ -37,6 +39,10 @@ def send_message():
 @app.route("/health")
 def health():
     return jsonify({"status": "healthy"})
+
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204  # prevent favicon errors
 
 def run_flask():
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
