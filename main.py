@@ -44,6 +44,16 @@ def health():
 def favicon():
     return "", 204  # prevent favicon errors
 
+@app.route("/debug-users")
+def debug_users():
+    from database import get_db_connection
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT username, chat_id FROM users")
+            rows = cur.fetchall()
+            return jsonify(rows)
+
+
 def run_flask():
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
