@@ -1,6 +1,5 @@
 import os
 import threading
-import asyncio
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from telegram import Bot
@@ -8,18 +7,18 @@ from database import create_tables, get_chat_id
 from bot import setup_bot
 from telegram.ext import Application
 
-# Setup database
+# Setup database tables if not exist
 create_tables()
 
-# Setup Telegram Bot
+# Telegram Bot setup
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = Bot(token=TELEGRAM_TOKEN)
 application = Application.builder().token(TELEGRAM_TOKEN).build()
 setup_bot(application)
 
-# Flask App for OTP delivery
+# Flask app with CORS enabled
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all domains
+CORS(app)  # Enable CORS for all origins
 
 @app.route('/send-message', methods=['POST'])
 def send_message():
@@ -37,9 +36,8 @@ def send_message():
 
     if chat_id:
         try:
-            loop = asyncio.get_event_loop()
-            # Schedule async send_message coroutine on bot event loop
-            loop.create_task(bot.send_message(chat_id=chat_id, text=message))
+            # Schedule the async send_message task in the bot's event loop
+            application.create_task(bot.send_message(chat_id=chat_id, text=message))
             print("[DEBUG] Scheduled Telegram send_message coroutine")
             return jsonify({"status": "Message scheduled"})
         except Exception as e:
@@ -55,7 +53,7 @@ def health():
 
 @app.route("/favicon.ico")
 def favicon():
-    return "", 204  # prevent favicon errors
+    return "", 204  # Prevent favicon errors
 
 @app.route("/debug-users")
 def debug_users():
