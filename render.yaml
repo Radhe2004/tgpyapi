@@ -5,6 +5,6 @@ services:
     plan: free
     envVars:
       - key: TELEGRAM_TOKEN
-        value: your_bot_token_here
+        value: your_telegram_bot_token_here
       - key: DATABASE_URL
-        value: postgresql://user:pass@host:port/dbname
+        value: postgresql://user:password@host:port/dbname
