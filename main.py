@@ -1,11 +1,15 @@
 import os
 import threading
 import asyncio
+import nest_asyncio
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from telegram.ext import Application
 from database import get_chat_id, create_tables
 from bot import setup_bot
+
+# Apply nest_asyncio to allow nested event loops (fixes asyncio conflicts)
+nest_asyncio.apply()
 
 # Initialize DB
 create_tables()
@@ -37,12 +41,10 @@ def send_message():
         if not chat_id:
             return jsonify({"error": "Username not found"}), 404
 
-        # Send Telegram message using bot from application
-        future = asyncio.run_coroutine_threadsafe(
-            application.bot.send_message(chat_id=chat_id, text=message),
-            application.loop
-        )
-        future.result(timeout=10)
+        # Properly await the async send_message coroutine inside sync Flask route
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(application.bot.send_message(chat_id=chat_id, text=message))
+
         return jsonify({"status": "Message sent"})
 
     except Exception as e:
@@ -57,4 +59,5 @@ def run_flask():
 
 if __name__ == "__main__":
     threading.Thread(target=run_flask).start()
+    # Run polling (Telegram bot main loop)
     application.run_polling()
