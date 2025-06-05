@@ -6,29 +6,19 @@ from flask_cors import CORS
 from telegram import Bot
 from telegram.ext import Application
 
-# Dummy placeholder functions for your DB logic
-def create_tables():
-    pass
+from database import get_chat_id, create_tables
+from bot import setup_bot
 
-def get_chat_id(username):
-    # Replace with your DB lookup for username -> chat_id
-    dummy_users = {"alice": 123456789, "bob": 987654321}
-    return dummy_users.get(username)
-
-def setup_bot(app):
-    # Add handlers to your Application here if needed
-    pass
-
-# Setup database tables if not exist
+# Initialize DB
 create_tables()
 
-# Telegram Bot setup
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN") or "YOUR_TELEGRAM_BOT_TOKEN"
+# Telegram setup
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = Bot(token=TELEGRAM_TOKEN)
 application = Application.builder().token(TELEGRAM_TOKEN).build()
 setup_bot(application)
 
-# Flask app with CORS enabled
+# Flask app
 app = Flask(__name__)
 CORS(app)
 
@@ -39,22 +29,19 @@ def send_message():
     message = data.get("message")
 
     if not username or not message:
-        return jsonify({"error": "Invalid request, missing username or message"}), 400
+        return jsonify({"error": "Missing username or message"}), 400
 
     chat_id = get_chat_id(username)
-
     if chat_id:
         try:
-            # Schedule coroutine thread-safe on bot's event loop
             future = asyncio.run_coroutine_threadsafe(
                 bot.send_message(chat_id=chat_id, text=message),
                 application.loop
             )
-            # Wait for result to ensure sending succeeded
             future.result(timeout=10)
             return jsonify({"status": "Message sent"})
         except Exception as e:
-            return jsonify({"error": "Failed to send Telegram message", "details": str(e)}), 500
+            return jsonify({"error": "Failed to send message", "details": str(e)}), 500
     else:
         return jsonify({"error": "Username not found"}), 404
 
@@ -66,9 +53,6 @@ def run_flask():
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
 if __name__ == "__main__":
-    # Run Flask app in a separate thread
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.start()
-
-    # Run Telegram bot polling (this blocks main thread)
     application.run_polling()
